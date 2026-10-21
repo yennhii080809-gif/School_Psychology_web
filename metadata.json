@@ -1,0 +1,8 @@
+{
+  "name": "Góc Tư Vấn Học Đường - Lắng Nghe, Đồng Hành, Thấu Hiểu",
+  "description": "Website tư vấn tâm lý học đường - Không gian an toàn để học sinh được lắng nghe, chia sẻ và đặt lịch hỗ trợ tâm lý, học tập và hướng nghiệp.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
