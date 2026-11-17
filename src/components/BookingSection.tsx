@@ -73,6 +73,11 @@ export const BookingSection: React.FC<BookingSectionProps> = ({ initialTopic }) 
     e.preventDefault();
     setSubmitError('');
 
+    if (format === 'letter') {
+      setSubmitError('Hộp thư tâm sự chưa được kết nối với hệ thống tiếp nhận. Vui lòng chưa gửi nội dung tại mục này.');
+      return;
+    }
+
     // FormSubmit is enabled only in local development for temporary testing.
     // Never send student names, contact details, counseling topics, or free-text notes.
     if (!import.meta.env.DEV) {
@@ -101,10 +106,8 @@ export const BookingSection: React.FC<BookingSectionProps> = ({ initialTopic }) 
         'Hinh thuc': format === 'offline' ? 'Truc tiep tai truong' : format === 'online' ? 'Truc tuyen (Meet)' : 'Hop thu bao mat',
       };
 
-      if (format !== 'letter') {
-        notification['Ngay hen'] = selectedDate;
-        notification['Khung gio'] = finalTime;
-      }
+      notification['Ngay hen'] = selectedDate;
+      notification['Khung gio'] = finalTime;
 
       const response = await fetch('https://formsubmit.co/ajax/yennhii.08.08.09@gmail.com', {
         method: 'POST',
@@ -218,7 +221,7 @@ export const BookingSection: React.FC<BookingSectionProps> = ({ initialTopic }) 
               <div className="mt-6 sm:mt-8 max-w-lg mx-auto bg-amber-50 rounded-2xl p-3.5 sm:p-4 border border-amber-200 text-xs text-amber-800 flex items-start gap-2.5 text-left">
                 <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
                 <span className="break-words whitespace-normal leading-relaxed">
-                  <strong>Lưu ý:</strong> Vui lòng lưu lại mã số này. Đến giờ hẹn, bạn chỉ cần ghé phòng tư vấn ở Lầu 3 gần dãy Xã hội, Trường THPT Chuyên Nguyễn Đình Chiểu hoặc gửi email đến{' '}
+                  <strong>Lưu ý:</strong> Đây là xác nhận hệ thống đã gửi thông báo kiểm thử, chưa phải xác nhận giáo viên đã duyệt lịch. Vui lòng lưu lại mã số này. Đến giờ hẹn, bạn chỉ cần ghé phòng tư vấn ở Lầu 3 gần dãy Xã hội, Trường THPT Chuyên Nguyễn Đình Chiểu hoặc gửi email đến{' '}
                   <a href="mailto:Nguyenthithuyvy.psychology@gmail.com" className="font-bold underline text-amber-900 break-all">
                     Nguyenthithuyvy.psychology@gmail.com
                   </a>
@@ -541,7 +544,7 @@ export const BookingSection: React.FC<BookingSectionProps> = ({ initialTopic }) 
               <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div className="flex items-center gap-2 text-xs text-slate-500">
                   <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                  <span>Dữ liệu đăng ký được mã hóa và bảo mật hoàn toàn theo quy chuẩn y tế học đường.</span>
+                  <span>Bản thử nghiệm chỉ gửi mã lịch, hình thức, ngày và giờ đến email kiểm thử. Không nhập thông tin thật hoặc nội dung riêng tư.</span>
                 </div>
 
                 <button
