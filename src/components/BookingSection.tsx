@@ -125,12 +125,12 @@ export const BookingSection: React.FC<BookingSectionProps> = ({ initialTopic }) 
 
       setSubmittedBooking({
         code: randomCode,
-      topic,
-      format: format === 'offline' ? 'Trực tiếp tại trường' : format === 'online' ? 'Trực tuyến (Meet)' : 'Hộp thư bảo mật',
-      name: isAnonymous ? (nickname || 'Ẩn danh') : (studentName || 'Học sinh'),
-      date: selectedDate,
-      time: finalTime,
-      location: locationText,
+        topic,
+        format: format === 'offline' ? 'Trực tiếp tại trường' : 'Trực tuyến (Meet)',
+        name: isAnonymous ? (nickname || 'Ẩn danh') : (studentName || 'Học sinh'),
+        date: selectedDate,
+        time: finalTime,
+        location: locationText,
       });
     } catch (error) {
       setSubmitError(error instanceof Error ? error.message : 'Không thể gửi email kiểm thử.');
@@ -172,7 +172,7 @@ export const BookingSection: React.FC<BookingSectionProps> = ({ initialTopic }) 
                 <CheckCircle className="w-8 h-8 sm:w-10 sm:h-10" />
               </div>
               <h3 className="text-xl xs:text-2xl sm:text-3xl font-extrabold text-[#1e486b] mb-2">
-                Đặt Lịch Thành Công!
+                Gửi Thông Báo Kiểm Thử Thành Công!
               </h3>
               <p className="text-slate-600 text-xs sm:text-sm md:text-base max-w-md mx-auto mb-6 sm:mb-8">
                 Thông báo kiểm thử đã được gửi đến hộp thư nhận thử nghiệm. Đây chưa phải xác nhận lịch hẹn chính thức.
