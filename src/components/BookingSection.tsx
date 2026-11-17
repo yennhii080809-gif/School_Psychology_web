@@ -37,6 +37,8 @@ export const BookingSection: React.FC<BookingSectionProps> = ({ initialTopic }) 
   const [selectedTime, setSelectedTime] = useState('7h30 - 8h15');
   const [customOtherTime, setCustomOtherTime] = useState('');
   const [notes, setNotes] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState('');
   const [submittedBooking, setSubmittedBooking] = useState<{
     code: string;
     topic: string;
@@ -67,8 +69,23 @@ export const BookingSection: React.FC<BookingSectionProps> = ({ initialTopic }) 
 
   const otherSlot = 'Giờ khác (hẹn trước 1 tuần)';
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSubmitError('');
+
+    if (format === 'letter') {
+      setSubmitError('Hộp thư tâm sự chưa được kết nối với hệ thống tiếp nhận. Vui lòng chưa gửi nội dung tại mục này.');
+      return;
+    }
+
+    // FormSubmit is enabled only in local development for temporary testing.
+    // Never send student names, contact details, counseling topics, or free-text notes.
+    if (!import.meta.env.DEV) {
+      setSubmitError('Chức năng email hiện chỉ bật trong môi trường chạy thử local.');
+      return;
+    }
+
+    setIsSubmitting(true);
     const randomCode = 'TV-' + Math.floor(1000 + Math.random() * 9000);
     
     const locationText = format === 'offline' 
@@ -81,15 +98,45 @@ export const BookingSection: React.FC<BookingSectionProps> = ({ initialTopic }) 
       ? (customOtherTime.trim() ? `${otherSlot}: ${customOtherTime.trim()}` : otherSlot)
       : selectedTime;
 
-    setSubmittedBooking({
-      code: randomCode,
-      topic,
-      format: format === 'offline' ? 'Trực tiếp tại trường' : format === 'online' ? 'Trực tuyến (Meet)' : 'Hộp thư bảo mật',
-      name: isAnonymous ? (nickname || 'Ẩn danh') : (studentName || 'Học sinh'),
-      date: selectedDate,
-      time: finalTime,
-      location: locationText,
-    });
+    try {
+      const notification: Record<string, string> = {
+        _subject: `Kiểm thử đặt lịch tư vấn ${randomCode}`,
+        _template: 'table',
+        'Ma lich hen': randomCode,
+        'Hinh thuc': format === 'offline' ? 'Truc tiep tai truong' : format === 'online' ? 'Truc tuyen (Meet)' : 'Hop thu bao mat',
+      };
+
+      notification['Ngay hen'] = selectedDate;
+      notification['Khung gio'] = finalTime;
+
+      const response = await fetch('https://formsubmit.co/ajax/yennhii.08.08.09@gmail.com', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+        body: JSON.stringify(notification),
+      });
+      const result = await response.json();
+
+      if (!response.ok || String(result.success) !== 'true') {
+        throw new Error(result.message || 'FormSubmit chưa xác nhận đã nhận thông báo.');
+      }
+
+      setSubmittedBooking({
+        code: randomCode,
+        topic,
+        format: format === 'offline' ? 'Trực tiếp tại trường' : 'Trực tuyến (Meet)',
+        name: isAnonymous ? (nickname || 'Ẩn danh') : (studentName || 'Học sinh'),
+        date: selectedDate,
+        time: finalTime,
+        location: locationText,
+      });
+    } catch (error) {
+      setSubmitError(error instanceof Error ? error.message : 'Không thể gửi email kiểm thử.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleReset = () => {
@@ -125,10 +172,10 @@ export const BookingSection: React.FC<BookingSectionProps> = ({ initialTopic }) 
                 <CheckCircle className="w-8 h-8 sm:w-10 sm:h-10" />
               </div>
               <h3 className="text-xl xs:text-2xl sm:text-3xl font-extrabold text-[#1e486b] mb-2">
-                Đặt Lịch Thành Công!
+                Gửi Thông Báo Kiểm Thử Thành Công!
               </h3>
               <p className="text-slate-600 text-xs sm:text-sm md:text-base max-w-md mx-auto mb-6 sm:mb-8">
-                Cảm ơn bạn đã mở lòng. Thầy cô đã nhận được thông tin lịch hẹn và rất mong chờ được lắng nghe bạn.
+                Thông báo kiểm thử đã được gửi đến hộp thư nhận thử nghiệm. Đây chưa phải xác nhận lịch hẹn chính thức.
               </p>
 
               {/* Digital Boarding Pass / Ticket */}
@@ -174,7 +221,7 @@ export const BookingSection: React.FC<BookingSectionProps> = ({ initialTopic }) 
               <div className="mt-6 sm:mt-8 max-w-lg mx-auto bg-amber-50 rounded-2xl p-3.5 sm:p-4 border border-amber-200 text-xs text-amber-800 flex items-start gap-2.5 text-left">
                 <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
                 <span className="break-words whitespace-normal leading-relaxed">
-                  <strong>Lưu ý:</strong> Vui lòng lưu lại mã số này. Đến giờ hẹn, bạn chỉ cần ghé phòng tư vấn ở Lầu 3 gần dãy Xã hội, Trường THPT Chuyên Nguyễn Đình Chiểu hoặc gửi email đến{' '}
+                  <strong>Lưu ý:</strong> Đây là xác nhận hệ thống đã gửi thông báo kiểm thử, chưa phải xác nhận giáo viên đã duyệt lịch. Vui lòng lưu lại mã số này. Đến giờ hẹn, bạn chỉ cần ghé phòng tư vấn ở Lầu 3 gần dãy Xã hội, Trường THPT Chuyên Nguyễn Đình Chiểu hoặc gửi email đến{' '}
                   <a href="mailto:Nguyenthithuyvy.psychology@gmail.com" className="font-bold underline text-amber-900 break-all">
                     Nguyenthithuyvy.psychology@gmail.com
                   </a>
@@ -196,6 +243,18 @@ export const BookingSection: React.FC<BookingSectionProps> = ({ initialTopic }) 
             /* Booking Form */
             <form onSubmit={handleSubmit} className="p-4 xs:p-6 sm:p-10 lg:p-12 space-y-6 sm:space-y-8">
               
+              {import.meta.env.DEV && (
+                <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs leading-relaxed text-amber-900">
+                  <strong>Chế độ kiểm thử email:</strong> chỉ gửi mã lịch, hình thức, ngày và giờ. Họ tên, thông tin liên hệ, chủ đề và ghi chú không được gửi. Hãy dùng dữ liệu giả, không nhập thông tin thật của học sinh.
+                </div>
+              )}
+
+              {submitError && (
+                <div role="alert" className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+                  {submitError}
+                </div>
+              )}
+
               {/* Step 1: Chọn Hình thức Tư vấn */}
               <div>
                 <label className="block text-sm font-bold text-slate-800 mb-3">
@@ -485,14 +544,15 @@ export const BookingSection: React.FC<BookingSectionProps> = ({ initialTopic }) 
               <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div className="flex items-center gap-2 text-xs text-slate-500">
                   <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                  <span>Dữ liệu đăng ký được mã hóa và bảo mật hoàn toàn theo quy chuẩn y tế học đường.</span>
+                  <span>Bản thử nghiệm chỉ gửi mã lịch, hình thức, ngày và giờ đến email kiểm thử. Không nhập thông tin thật hoặc nội dung riêng tư.</span>
                 </div>
 
                 <button
                   type="submit"
-                  className="w-full sm:w-auto px-8 py-4 bg-[#4a7c59] hover:bg-[#3d694a] text-white rounded-full font-bold text-base shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer flex-shrink-0"
+                  disabled={isSubmitting}
+                  className="w-full sm:w-auto px-8 py-4 bg-[#4a7c59] hover:bg-[#3d694a] disabled:opacity-60 disabled:cursor-not-allowed text-white rounded-full font-bold text-base shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer flex-shrink-0"
                 >
-                  <span>Xác nhận đặt lịch tư vấn</span>
+                  <span>{isSubmitting ? 'Đang gửi kiểm thử...' : 'Xác nhận đặt lịch tư vấn'}</span>
                   <ArrowRight className="w-5 h-5" />
                 </button>
               </div>
